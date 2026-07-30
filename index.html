@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1b3724">
+<title>Selezione Fenotipi</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg:#11141a; --card:#1a1f27; --card2:#222834; --line:#2e3642;
+    --txt:#e9edf3; --dim:#94a0b0; --acc:#4ea96b; --acc2:#3d8a56;
+    --warn:#d9584f; --gold:#d8a441;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--txt);
+    font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    overscroll-behavior-y:contain}
+  body{padding-bottom:100px; padding-top:env(safe-area-inset-top)}
+  button{font-family:inherit}
+
+  header{position:sticky; top:0; z-index:10; background:rgba(17,20,26,.97);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:10px; padding:10px 12px; min-height:56px}
+  header h1{font-size:15px; font-weight:600; margin:0; flex:1; letter-spacing:.2px; min-width:0}
+  header .sub{display:block; font-size:12px; color:var(--dim); font-weight:400; margin-top:1px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .iconbtn{background:var(--card2); border:1px solid var(--line); color:var(--txt);
+    width:40px; height:40px; border-radius:10px; font-size:19px; flex:0 0 auto}
+  .chip{background:var(--card2); border:1px solid var(--line); color:var(--txt);
+    height:40px; padding:0 12px; border-radius:10px; font-size:13px; font-weight:600; flex:0 0 auto}
+  .prog{font-size:12px; color:var(--dim); font-variant-numeric:tabular-nums}
+
+  main{padding:14px 12px 0}
+  h2{font-size:20px; margin:2px 0 4px; line-height:1.25}
+  .hint{color:var(--dim); font-size:13px; margin:0 0 14px}
+  label{display:block; font-size:13px; color:var(--dim); margin:14px 0 6px}
+
+  .cards{display:grid; gap:10px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:15px 16px; text-align:left; width:100%; color:var(--txt); display:block}
+  .card .t{font-size:17px; font-weight:600; display:block}
+  .card .d{font-size:13px; color:var(--dim); margin-top:3px; display:block}
+  .card.add{border-style:dashed; text-align:center}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:9px}
+  .pill{background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:13px 6px; text-align:center; color:var(--txt); position:relative}
+  .pill b{display:block; font-size:16px; font-weight:600}
+  .pill span{display:block; font-size:11px; color:var(--dim); margin-top:2px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .pill.done{border-color:var(--acc2)}
+  .pill.altri::before{content:"•"; position:absolute; top:2px; left:7px;
+    color:var(--gold); font-size:17px; line-height:1}
+  .pill.done::after{content:"✓"; position:absolute; top:5px; right:7px;
+    color:var(--acc); font-size:12px; font-weight:700}
+
+  .scale{display:flex; gap:8px; margin:6px 0 16px}
+  .scale button{flex:1; min-height:66px; font-size:24px; font-weight:700;
+    background:var(--card); border:1px solid var(--line); border-radius:12px; color:var(--txt)}
+  .scale button.on{background:var(--acc); border-color:var(--acc); color:#08120c}
+
+  .anc{list-style:none; margin:0; padding:0; display:grid; gap:6px}
+  .anc li{background:var(--card); border:1px solid var(--line); border-left:3px solid var(--line);
+    border-radius:9px; padding:9px 11px; font-size:13.5px; color:var(--dim)}
+  .anc li b{color:var(--txt); margin-right:7px; font-variant-numeric:tabular-nums}
+  .anc li.on{border-left-color:var(--acc); color:var(--txt); background:var(--card2)}
+
+  input,textarea{width:100%; background:var(--card); border:1px solid var(--line);
+    border-radius:12px; color:var(--txt); padding:14px; font-size:17px; font-family:inherit}
+  input[type=number]{font-size:26px; font-weight:600; text-align:center}
+  textarea{font-size:16px; min-height:110px; resize:vertical}
+
+  .two{display:flex; gap:10px}
+  .two button{flex:1; min-height:64px; font-size:18px; font-weight:600;
+    background:var(--card); border:1px solid var(--line); border-radius:12px; color:var(--txt)}
+  .two button.on{background:var(--acc); border-color:var(--acc); color:#08120c}
+  .two button.no.on{background:var(--card2); border-color:var(--dim); color:var(--txt)}
+  .two button.si.ko.on{background:var(--warn); border-color:var(--warn); color:#fff}
+  .ko-note{color:var(--warn); font-size:12.5px; margin:10px 0 0}
+
+  .aroma{display:grid; gap:7px}
+  .arow{display:flex; align-items:center; gap:8px}
+  .arow .lab{flex:0 0 82px; font-size:13px; color:var(--dim)}
+  .arow .vals{flex:1; display:flex; gap:5px}
+  .arow .vals button{flex:1; min-height:42px; font-size:15px; font-weight:600;
+    background:var(--card); border:1px solid var(--line); border-radius:9px; color:var(--dim)}
+  .arow .vals button.on{background:var(--gold); border-color:var(--gold); color:#1a1205}
+  .arow.set .lab{color:var(--txt)}
+
+  .rev{display:grid; gap:7px; margin-bottom:6px}
+  .rev .r{display:flex; gap:10px; align-items:baseline; background:var(--card);
+    border:1px solid var(--line); border-radius:10px; padding:10px 12px; width:100%;
+    color:var(--txt); text-align:left}
+  .rev .r .k{flex:1; font-size:13px; color:var(--dim)}
+  .rev .r .v{font-size:16px; font-weight:600; font-variant-numeric:tabular-nums}
+  .rev .r .v.empty{color:var(--dim); font-weight:400}
+
+  footer{position:fixed; left:0; right:0; bottom:0; padding:12px;
+    padding-bottom:calc(12px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top,var(--bg) 62%,transparent); display:flex; gap:10px}
+  .primary{flex:1; min-height:56px; font-size:17px; font-weight:700; border-radius:13px;
+    background:var(--acc); border:none; color:#08120c}
+  .primary:disabled{background:var(--card2); color:var(--dim)}
+  .ghost{min-height:56px; padding:0 20px; font-size:16px; border-radius:13px;
+    background:var(--card); border:1px solid var(--line); color:var(--txt)}
+
+  .msg{padding:13px 15px; border-radius:12px; font-size:14px; margin-bottom:14px}
+  .msg.err{background:#2b1a1a; border:1px solid #5d2b28; color:#f2b8b4}
+  .msg.ok{background:#152418; border:1px solid #2c5738; color:#a9dcbb}
+  .msg.warn{background:#2a2313; border:1px solid #5d4a1f; color:#e6cf9a}
+  .center{text-align:center; padding:34px 10px; color:var(--dim)}
+  .big{font-size:42px; margin-bottom:8px}
+  .spin{display:inline-block; width:18px; height:18px; border:2px solid var(--line);
+    border-top-color:var(--acc); border-radius:50%; animation:s .7s linear infinite;
+    vertical-align:-3px; margin-right:8px}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="iconbtn" id="back" style="visibility:hidden">‹</button>
+  <h1 id="titolo">Selezione Fenotipi<span class="sub" id="sotto">avvio…</span></h1>
+  <button class="chip" id="chibtn" style="display:none"></button>
+  <span class="prog" id="prog"></span>
+</header>
+
+<main id="main"><div class="center"><span class="spin"></span>Avvio…</div></main>
+<footer id="footer" style="display:none"></footer>
+
+<script>
+'use strict';
+
+// ====================================================================== DATI ==
+
+var SCALE = {
+  vigore:['Stentata, resta indietro rispetto alle sorelle','Crescita lenta, sotto la media del lotto','Nella media del lotto','Crescita rapida e costante, sopra la media','Nettamente la più vigorosa, domina il gruppo'],
+  struttura:['Internodi molto lunghi, pianta lassa e cadente','Internodi lunghi, richiede molto sostegno','Struttura media, equilibrata','Internodi corti, buona ramificazione laterale','Internodi corti e uniformi, compatta, si regge da sola'],
+  radicazione:['Talea non radicata o morta','Oltre 20 giorni, radici scarse','14-20 giorni, radici sufficienti','10-14 giorni, apparato radicale buono','Entro 10 giorni, radici abbondanti e bianche'],
+  resistenza:['Reagisce male a qualsiasi variazione, recupero lentissimo','Sensibile, mostra spesso sintomi fogliari','Tollera le condizioni normali senza problemi','Sopporta bene errori e stress, recupero rapido','Nessun sintomo anche sotto stress marcato'],
+  resina:['Tricomi radi, cime opache','Resina scarsa, presente solo sui calici','Copertura media, cime lucide','Copertura fitta su calici e foglioline','Tricomi su calici, foglioline e steli: bianca e appiccicosa'],
+  intAroma:['Quasi inodore','Percepibile solo da molto vicino','Chiaro avvicinandosi alla pianta','Riempie la tenda all’apertura','Si sente fuori dallo spazio di coltura, invadente'],
+  carattere:['Generico, "erba", nessuna nota distinguibile','Poco definito, note confuse o sgradevoli','Riconoscibile ma comune nel lotto','Profilo definito e piacevole, distinguibile a occhi chiusi','Complesso e originale, diverso da tutte le altre del lotto'],
+  cima:['Cime arieggiate e sottili, foxtail disordinato','Cime lasse, poco corpo','Densità media, cima regolare','Cime compatte e ben formate','Cime molto dense e sode, colonne piene'],
+  caliceFoglia:['Molte foglie interne, cima pelosa, manicure pesantissima','Foglie abbondanti tra i calici','Rapporto medio','Poche foglioline, calici in evidenza','Calici grandi, foglioline quasi assenti'],
+  bagAppeal:['Aspetto sciatto, colore spento','Poco attraente','Aspetto normale, gradevole','Molto bella: colore, tricomi e forma evidenti','Eccezionale, colpisce a colpo d’occhio'],
+  manicure:['Lentissima, foglie incastrate nei calici','Laboriosa','Nella media','Veloce e pulita','Pochissimo scarto, si rifinisce in pochi minuti'],
+  aromaCura:['Perso, o virato su fieno ed erba secca','Molto attenuato rispetto al fresco','Mantenuto ma semplice','Intenso e ben definito','Intenso, complesso, migliorato rispetto al fresco'],
+  gusto:['Sgradevole, aspro o di clorofilla','Piatto o poco piacevole','Neutro e gradevole ma anonimo','Pieno, corrispondente all’aroma','Intenso e persistente, retrogusto pulito'],
+  effetto:['Quasi assente o sgradevole','Debole o poco interessante','Nella media, prevedibile','Deciso e ben caratterizzato','Potente e distintivo, esattamente il profilo cercato'],
+  tenuta:['Aroma svanito','Calo netto','Leggero calo','Praticamente invariato','Invariato o ulteriormente evoluto in meglio'],
+  cenere:['Si spegne, cenere nera, tira male','Combustione irregolare, cenere scura','Combustione regolare, cenere grigia','Combustione uniforme, cenere chiara','Combustione perfetta e uniforme, cenere bianca']
+};
+
+var DESCRITTORI = [['agrume','Agrume'],['gasolio','Gasolio'],['skunk','Skunk'],['terroso','Terroso'],
+  ['dolce','Dolce'],['speziato','Speziato'],['pino','Pino'],['floreale','Floreale'],
+  ['frutta','Frutta'],['legnoso','Legnoso']];
+
+function sc(k, label){ return {t:'score', k:k, label:label, anc:SCALE[k]}; }
+
+var FASI = {
+  veg:{ nome:'Veg', desc:'Vigore, struttura, talea, resistenza', chiave:'pianta', steps:[
+    {t:'data', k:'data', label:'Data del rilievo'},
+    sc('vigore','Vigore'), sc('struttura','Struttura e internodi'),
+    sc('radicazione','Radicazione talea'), sc('resistenza','Resistenza a stress'),
+    {t:'sn', k:'taleaPresa', label:'Talea prelevata ed etichettata?',
+     hint:'Senza clone il fenotipo migliore lo perdi. Va fatto prima del flip.'},
+    {t:'text', k:'taleaId', label:'ID della talea', hint:'Facoltativo. Es. T-P03.'},
+    {t:'sn', k:'taleaViva', label:'La talea è viva e radicata?',
+     hint:'Se rispondi NO, la pianta resta valutabile ma non selezionabile come madre.'},
+    {t:'note', k:'note', label:'Note'}
+  ]},
+  fioritura:{ nome:'Fioritura', desc:'Misure, resina, aroma, controlli KO', chiave:'pianta', steps:[
+    {t:'data', k:'dataFlip', label:'Data del flip'},
+    {t:'num', k:'altFlip', label:'Altezza al flip', unita:'cm'},
+    {t:'num', k:'altS3', label:'Altezza a settimana 3', unita:'cm'},
+    {t:'num', k:'giorni', label:'Giorni di fioritura', unita:'giorni',
+     hint:'Si compila al taglio. Se non lo sai ancora, lascia vuoto.'},
+    sc('resina','Produzione di resina'), sc('intAroma','Intensità aroma in fiore'),
+    sc('carattere','Carattere aromatico'), sc('cima','Struttura e densità cima'),
+    sc('caliceFoglia','Rapporto calice / foglia'),
+    {t:'aroma', label:'Profilo aromatico',
+     hint:'Intensità 0-5 per descrittore. Non fa punteggio: serve a distinguere i fenotipi fra loro.'},
+    {t:'sn', k:'sacche', label:'Sacche polliniche o nanine?', ko:true},
+    {t:'sn', k:'muffa', label:'Muffa o oidio in condizioni normali?', ko:true},
+    {t:'note', k:'note', label:'Note'}
+  ]},
+  raccolto:{ nome:'Raccolto', desc:'Pesi, bag appeal, manicure', chiave:'pianta', steps:[
+    {t:'data', k:'data', label:'Data del raccolto'},
+    {t:'num', k:'pesoFresco', label:'Peso fresco', unita:'g'},
+    {t:'num', k:'pesoSecco', label:'Peso secco', unita:'g',
+     hint:'A umidità di conservazione stabile, appena tolto dall’essiccatoio.'},
+    sc('bagAppeal','Bag appeal'), sc('manicure','Facilità di manicure'),
+    {t:'note', k:'note', label:'Note'}
+  ]},
+  cura:{ nome:'Cura', desc:'Prova alla cieca sui campioni', chiave:'codice', steps:[
+    {t:'data', k:'data', label:'Data della prova'},
+    sc('aromaCura','Aroma dopo cura'), sc('gusto','Gusto'), sc('effetto','Effetto'),
+    sc('tenuta','Tenuta aroma (60 giorni)'), sc('cenere','Cenere e combustione'),
+    {t:'note', k:'note', label:'Note',
+     hint:'Descrivi aroma e gusto con parole tue: fra un mese ricorderai il numero, non la sensazione.'}
+  ]}
+};
+
+// ===================================================================== STATO ==
+
+var K = { cfg:'sf_cfg_v2', coda:'sf_coda_v2', bozza:'sf_bozza_v2' };
+var CFG = { clientId:'', modelloId:'', sheetId:'', sheetNome:'', chi:'' };
+var S = { vista:'avvio', fase:null, indice:null, etichetta:'', step:0, dati:{},
+          stato:null, coltivi:null, msg:null, esito:null };
+
+function leggi(k, def){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : def; }catch(e){ return def; } }
+function scrivi(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function cancella(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+function el(h){ var d=document.createElement('div'); d.innerHTML=h.trim(); return d.firstChild; }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+  .replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function oggi(){ var d=new Date(), p=function(n){return ('0'+n).slice(-2);};
+  return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear(); }
+
+// ================================================================== GOOGLE ==
+// L'app parla direttamente con Drive e Sheets usando il TUO account.
+// Nessun server in mezzo: quello che vedi e' quello a cui hai accesso.
+
+var SCOPES = 'https://www.googleapis.com/auth/spreadsheets ' +
+             'https://www.googleapis.com/auth/drive';
+var DRIVE  = 'https://www.googleapis.com/drive/v3';
+var SHEETS = 'https://sheets.googleapis.com/v4/spreadsheets';
+var LOG_RANGE = 'Valutazioni!B5:G20000';
+
+var tokenClient = null;
+var ACCESS = { token:null, scad:0 };
+
+function gisPronto(){
+  return typeof google !== 'undefined' && google.accounts && google.accounts.oauth2;
+}
+function attendiGis(){
+  return new Promise(function(res, rej){
+    var t0 = Date.now();
+    (function p(){
+      if (gisPronto()) return res();
+      if (Date.now() - t0 > 6000) return rej(new Error('Libreria Google non caricata: al primo avvio serve la rete.'));
+      setTimeout(p, 150);
+    })();
+  });
+}
+
+function accedi(interattivo){
+  if (ACCESS.token && Date.now() < ACCESS.scad - 60000) return Promise.resolve(ACCESS.token);
+  if (!CFG.clientId) return Promise.reject(new Error('Manca il Client ID: aprilo in configurazione.'));
+  return attendiGis().then(function(){
+    return new Promise(function(res, rej){
+      if (!tokenClient){
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: CFG.clientId, scope: SCOPES, callback: function(){}
+        });
+      }
+      tokenClient.callback = function(r){
+        if (r.error) return rej(new Error(r.error_description || r.error));
+        ACCESS.token = r.access_token;
+        ACCESS.scad  = Date.now() + (Number(r.expires_in || 3600) * 1000);
+        res(ACCESS.token);
+      };
+      tokenClient.error_callback = function(e){
+        rej(new Error(e && e.type === 'popup_closed'
+          ? 'Accesso annullato.' : 'Accesso non riuscito. Controlla il Client ID e le origini autorizzate.'));
+      };
+      try { tokenClient.requestAccessToken({ prompt: interattivo ? 'consent' : '' }); }
+      catch (e){ rej(e); }
+    });
+  });
+}
+
+function g(url, opt){
+  return accedi(false).then(function(tok){
+    opt = opt || {};
+    opt.headers = opt.headers || {};
+    opt.headers['Authorization'] = 'Bearer ' + tok;
+    if (opt.body) opt.headers['Content-Type'] = 'application/json';
+    return fetch(url, opt);
+  }).then(function(r){
+    if (r.status === 401){
+      ACCESS.token = null;
+      throw new Error('Sessione Google scaduta: tocca di nuovo per rientrare.');
+    }
+    if (r.status === 403) throw new Error('Permesso negato da Google. Non hai accesso a questo foglio, oppure mancano gli ambiti richiesti.');
+    if (!r.ok) return r.text().then(function(t){ throw new Error('Google ha risposto ' + r.status + ': ' + t.slice(0,140)); });
+    return r.status === 204 ? {} : r.json();
+  });
+}
+
+function colL(n){ var s=''; while(n>0){ var m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=(n-m)/26; } return s; }
+
+// posizione delle colonne nei fogli di fase (le stesse del file)
+var MAPPA = {
+  veg:{ foglio:'Veg', diretti:{data:4}, nota:9, faseAnagrafica:'Veg',
+        logs:[{fase:'veg', criteri:['vigore','struttura','radicazione','resistenza']}],
+        extra:{foglio:'Anagrafica', campi:{taleaPresa:7, taleaId:8, taleaViva:9}} },
+  fioritura:{ foglio:'Fioritura', nota:16, faseAnagrafica:'Fioritura',
+        diretti:{dataFlip:4, altFlip:5, altS3:6, giorni:8, sacche:14, muffa:15},
+        logs:[{fase:'fioritura', criteri:['resina','intAroma','carattere','cima','caliceFoglia']},
+              {fase:'aroma', criteri:['agrume','gasolio','skunk','terroso','dolce','speziato','pino','floreale','frutta','legnoso']}] },
+  raccolto:{ foglio:'Raccolto', nota:10, faseAnagrafica:'Raccolto',
+        diretti:{data:4, pesoFresco:5, pesoSecco:6},
+        logs:[{fase:'raccolto', criteri:['bagAppeal','manicure']}] },
+  cura:{ foglio:'Cura', nota:10, diretti:{data:4},
+        logs:[{fase:'cura', criteri:['aromaCura','gusto','effetto','tenuta','cenere']}] }
+};
+
+function api(azione, extra){
+  extra = extra || {};
+  if (azione === 'coltivi')      return apiColtivi();
+  if (azione === 'nuovoColtivo') return apiNuovo(extra.nome);
+  if (azione === 'stato')        return apiStato(CFG.sheetId);
+  if (azione === 'salva')        return apiSalva(extra);
+  if (azione === 'salvaCoda')    return apiCoda(extra.elenco);
+  return Promise.reject(new Error('Azione sconosciuta: ' + azione));
+}
+
+function apiColtivi(){
+  var q = "mimeType='application/vnd.google-apps.spreadsheet' and name contains 'Fenotipi' and trashed=false";
+  return g(DRIVE + '/files?q=' + encodeURIComponent(q) +
+           '&fields=' + encodeURIComponent('files(id,name,modifiedTime,ownedByMe)') +
+           '&orderBy=name&pageSize=50')
+    .then(function(d){
+      return (d.files || []).map(function(f){
+        var gg = String(f.modifiedTime || '').slice(0,10).split('-').reverse().join('/');
+        return { id:f.id, nome:f.name,
+                 info:(f.ownedByMe ? 'tuo' : 'condiviso con te') + (gg ? ' · aggiornato ' + gg : '') };
+      });
+    });
+}
+
+function apiNuovo(nome){
+  if (!CFG.modelloId) return Promise.reject(new Error('Manca l’ID del coltivo modello: impostalo in configurazione.'));
+  nome = String(nome || 'Coltivo').trim();
+  if (nome.indexOf('Fenotipi') < 0) nome = 'Fenotipi — ' + nome;
+  return g(DRIVE + '/files/' + CFG.modelloId + '/copy',
+           { method:'POST', body: JSON.stringify({ name: nome }) })
+    .then(function(f){ return { id:f.id, nome:f.name }; });
+}
+
+function batchGet(id, ranges){
+  var q = ranges.map(function(r){ return 'ranges=' + encodeURIComponent(r); }).join('&');
+  return g(SHEETS + '/' + id + '/values:batchGet?' + q + '&valueRenderOption=UNFORMATTED_VALUE')
+    .then(function(d){ return (d.valueRanges || []).map(function(x){ return x.values || []; }); });
+}
+
+function indiceVoti(log){
+  var voti = {};
+  log.forEach(function(r){
+    var val=String(r[1]||''), fase=String(r[2]||''), sog=String(r[3]||'');
+    if (!val || !fase || !sog) return;
+    var k = fase + '|' + sog;
+    if (!voti[k]) voti[k] = [];
+    if (voti[k].indexOf(val) < 0) voti[k].push(val);
+  });
+  return voti;
+}
+
+function apiStato(id){
+  if (!id) return Promise.reject(new Error('Nessun coltivo selezionato.'));
+  return batchGet(id, ['Anagrafica!B5:C24','CodiciCieco!B5:B24','Config!C27:C28', LOG_RANGE])
+    .then(function(v){
+      var ana=v[0], cod=v[1], cf=v[2], log=v[3];
+      var piante=[], codici=[];
+      for (var i=0;i<20;i++){
+        var a = ana[i] || [], c = cod[i] || [];
+        piante.push({ n:i, id:String(a[0] || ('P'+('0'+(i+1)).slice(-2))), genetica:String(a[1] || '') });
+        codici.push({ n:i, codice:String(c[0] || ('C'+('0'+(i+1)).slice(-2))) });
+      }
+      var valutatori = [];
+      cf.forEach(function(r){ var s = String((r||[])[0] || '').trim(); if (s) valutatori.push(s); });
+      return { piante:piante, codici:codici, voti:indiceVoti(log), valutatori:valutatori };
+    });
+}
+
+function apiSalva(p){
+  var cfg = MAPPA[p.fase];
+  if (!cfg) return Promise.reject(new Error('Fase non riconosciuta: ' + p.fase));
+  var id = p.sheetId || CFG.sheetId;
+  var chi = String(p.valutatore || '').trim();
+  if (!chi) return Promise.reject(new Error('Manca il nome del valutatore.'));
+  var idx = Number(p.indice);
+  if (!(idx >= 0 && idx < 20)) return Promise.reject(new Error('Indice fuori intervallo.'));
+
+  var riga = 5 + idx, dati = p.dati || {};
+  var rIdent = cfg.foglio + '!B' + riga;
+  var rNota  = cfg.nota ? (cfg.foglio + '!' + colL(cfg.nota) + riga) : null;
+  var chiedi = [rIdent, LOG_RANGE];
+  if (rNota) chiedi.push(rNota);
+
+  return batchGet(id, chiedi).then(function(v){
+    var soggetto = String((((v[0][0]) || [])[0]) || '').trim();
+    if (!soggetto) throw new Error('Riga ' + riga + ' senza identificativo in ' + cfg.foglio + '.');
+    var log = v[1];
+    var notaCur = rNota ? String((((v[2][0]) || [])[0]) || '') : '';
+
+    var scritture = [];
+    function metti(foglio, col, val){
+      if (val === undefined || val === null || val === '') return;
+      scritture.push({ range: foglio + '!' + colL(col) + riga, values: [[val]] });
+    }
+    Object.keys(cfg.diretti).forEach(function(k){ metti(cfg.foglio, cfg.diretti[k], dati[k]); });
+    if (cfg.extra) Object.keys(cfg.extra.campi).forEach(function(k){ metti(cfg.extra.foglio, cfg.extra.campi[k], dati[k]); });
+    if (cfg.faseAnagrafica) scritture.push({ range:'Anagrafica!J' + riga, values:[[cfg.faseAnagrafica]] });
+
+    // nota: sostituisce la riga di questo valutatore, lascia quella dell'altro
+    if (rNota){
+      var pref = '[' + chi + ']';
+      var righe = notaCur ? notaCur.split('\n') : [];
+      righe = righe.filter(function(l){ return l.indexOf(pref) !== 0; });
+      if (dati.note) righe.push(pref + ' ' + dati.note);
+      var nuovaNota = righe.join('\n');
+      if (nuovaNota !== notaCur) scritture.push({ range: rNota, values: [[nuovaNota]] });
+    }
+
+    // voti: aggiorna le mie righe, aggiunge le nuove
+    var pos = {};
+    log.forEach(function(r, i){
+      pos[[String(r[1]||''), String(r[2]||''), String(r[3]||''), String(r[4]||'')].join(' ')] = i;
+    });
+    var chiaviD = Object.keys(cfg.diretti);
+    var data = String(dati[chiaviD[0]] || '') || oggi();
+    var nuove = [], agg = 0;
+
+    cfg.logs.forEach(function(b){
+      b.criteri.forEach(function(k){
+        var val = dati[k];
+        if (val === undefined || val === null || val === '') return;   // 0 e' un voto valido
+        var key = [chi, b.fase, soggetto, k].join(' ');
+        if (pos.hasOwnProperty(key)){
+          var r0 = 5 + pos[key];
+          scritture.push({ range:'Valutazioni!B' + r0 + ':G' + r0,
+                           values:[[data, chi, b.fase, soggetto, k, val]] });
+          agg++;
+        } else {
+          nuove.push([data, chi, b.fase, soggetto, k, val]);
+        }
+      });
+    });
+
+    var passo = scritture.length
+      ? g(SHEETS + '/' + id + '/values:batchUpdate',
+          { method:'POST', body: JSON.stringify({ valueInputOption:'USER_ENTERED', data:scritture }) })
+      : Promise.resolve();
+
+    return passo.then(function(){
+      if (!nuove.length) return;
+      return g(SHEETS + '/' + id + '/values/' + encodeURIComponent('Valutazioni!B:G') +
+               ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS',
+               { method:'POST', body: JSON.stringify({ values: nuove }) });
+    }).then(function(){
+      return { riga:riga, soggetto:soggetto, nuove:nuove.length, aggiornate:agg };
+    });
+  });
+}
+
+function apiCoda(elenco){
+  var esiti = [];
+  return (elenco || []).reduce(function(cat, p){
+    return cat.then(function(){
+      return apiSalva(p).then(function(r){ esiti.push({ok:true, ris:r}); })
+        .catch(function(e){ esiti.push({ok:false, errore:String(e.message || e)}); });
+    });
+  }, Promise.resolve()).then(function(){ return esiti; });
+}
+
+function coda(){ return leggi(K.coda, []); }
+function setCoda(c){ scrivi(K.coda, c); }
+
+// ====================================================================== AVVIO ==
+
+(function avvio(){
+  CFG = leggi(K.cfg, CFG);
+  if (!CFG.clientId){ S.vista='setup'; return render(); }
+  if (!CFG.sheetId){ S.vista='coltivi'; caricaColtivi(); return render(); }
+  caricaStato();
+})();
+
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+
+function caricaColtivi(){
+  S.coltivi = null;
+  api('coltivi').then(function(d){ S.coltivi = d; render(); })
+    .catch(function(e){ S.coltivi = []; S.msg={tipo:'err', txt:'Non riesco a leggere i coltivi. '+esc(e.message)}; render(); });
+}
+
+function caricaStato(){
+  S.vista = 'attesa'; render();
+  api('stato').then(function(d){
+    S.stato = d;
+    if (!CFG.chi || (d.valutatori.length && d.valutatori.indexOf(CFG.chi) < 0)){
+      S.vista='chi'; return render();
+    }
+    var b = leggi(K.bozza, null);
+    if (b && b.fase && FASI[b.fase]){
+      S.msg = {tipo:'warn', txt:'C’era un rilievo non salvato su <b>'+esc(b.etichetta)+'</b>. L’ho ripreso da dove eri.'};
+      S.fase=b.fase; S.indice=b.indice; S.etichetta=b.etichetta; S.step=b.step||0; S.dati=b.dati||{};
+      S.vista='step';
+    } else { S.vista='home'; }
+    render();
+  }).catch(function(e){
+    S.vista='home';
+    S.msg = {tipo:'err', txt:'Non riesco a leggere il coltivo. '+esc(e.message)+
+      '<br>Se sei senza rete puoi comunque votare: i rilievi restano in coda.'};
+    render();
+  });
+}
+
+// ===================================================================== RENDER ==
+
+function testa(t, s){
+  document.getElementById('titolo').firstChild.textContent = t;
+  document.getElementById('sotto').textContent = s || '';
+}
+
+function render(){
+  var main = document.getElementById('main'), foot = document.getElementById('footer');
+  var back = document.getElementById('back'), cb = document.getElementById('chibtn');
+  main.innerHTML=''; foot.innerHTML=''; foot.style.display='none';
+  document.getElementById('prog').textContent='';
+  window.scrollTo(0,0);
+
+  var radice = (S.vista==='home' || S.vista==='setup' || S.vista==='attesa' ||
+                (S.vista==='coltivi' && !CFG.sheetId) || (S.vista==='chi' && !CFG.chi));
+  back.style.visibility = radice ? 'hidden' : 'visible';
+  if (CFG.chi && S.vista!=='chi' && S.vista!=='setup'){ cb.style.display='block'; cb.textContent=CFG.chi; }
+  else { cb.style.display='none'; }
+
+  if (S.msg){ main.appendChild(el('<div class="msg '+S.msg.tipo+'">'+S.msg.txt+'</div>')); S.msg=null; }
+
+  var v = {
+    setup:vistaSetup, coltivi:vistaColtivi, chi:vistaChi, home:vistaHome,
+    lista:vistaLista, step:vistaStep, rev:vistaRev, fine:vistaFine,
+    attesa:function(m){ testa('Selezione Fenotipi','carico…');
+      m.appendChild(el('<div class="center"><span class="spin"></span>Leggo il coltivo…</div>')); }
+  }[S.vista];
+  if (v) v(main, foot);
+}
+
+document.getElementById('back').onclick = function(){
+  if (S.vista==='lista') S.vista='home';
+  else if (S.vista==='step'){ if (S.step>0) S.step--; else S.vista='lista'; }
+  else if (S.vista==='rev'){ S.vista='step'; S.step = FASI[S.fase].steps.length-1; }
+  else if (S.vista==='fine') S.vista='home';
+  else if (S.vista==='chi'){ if (CFG.chi) S.vista='home'; else return; }
+  else if (S.vista==='coltivi'){ if (CFG.sheetId) S.vista='home'; else return; }
+  render();
+};
+document.getElementById('chibtn').onclick = function(){ S.vista='chi'; render(); };
+
+// ------------------------------------------------------------------- setup
+
+function vistaSetup(main, foot){
+  testa('Configurazione','Una volta sola, su questo telefono');
+  main.appendChild(el('<p class="hint">Serve il Client ID OAuth creato in Google Cloud. '+
+    'La procedura è nel file ISTRUZIONI_PWA.txt. Resta salvato solo su questo telefono.</p>'));
+
+  main.appendChild(el('<label>Client ID OAuth</label>'));
+  var e1 = el('<input type="text" inputmode="url" placeholder="123456-abcdef.apps.googleusercontent.com">');
+  e1.value = CFG.clientId || ''; main.appendChild(e1);
+
+  main.appendChild(el('<label>ID del coltivo modello (facoltativo)</label>'));
+  var e2 = el('<input type="text" placeholder="serve solo per il pulsante Nuovo coltivo">');
+  e2.value = CFG.modelloId || ''; main.appendChild(e2);
+  main.appendChild(el('<p class="hint" style="margin-top:8px">Lo trovi nell’indirizzo del foglio, '+
+    'fra <b>/d/</b> e <b>/edit</b>.</p>'));
+
+  var b = el('<button class="primary">Accedi con Google</button>');
+  b.onclick = function(){
+    var cid = e1.value.trim();
+    if (!/\.apps\.googleusercontent\.com$/.test(cid)){
+      S.msg={tipo:'err', txt:'Il Client ID deve finire per .apps.googleusercontent.com'};
+      return render();
+    }
+    CFG.clientId = cid;
+    CFG.modelloId = e2.value.trim();
+    CFG.sheetId=''; CFG.sheetNome='';
+    scrivi(K.cfg, CFG);
+    tokenClient = null; ACCESS.token = null;
+    b.disabled = true; b.innerHTML = '<span class="spin"></span>Accedo…';
+    accedi(true).then(function(){
+      S.vista='coltivi'; caricaColtivi(); render();
+    }).catch(function(e){
+      S.msg = {tipo:'err', txt:esc(e.message)};
+      render();
+    });
+  };
+  foot.appendChild(b); foot.style.display='flex';
+}
+
+// ------------------------------------------------------------------- coltivi
+
+function vistaColtivi(main, foot){
+  testa('I tuoi coltivi','Scegli su quale lavorare');
+  if (S.coltivi === null){
+    main.appendChild(el('<div class="center"><span class="spin"></span>Cerco nel Drive…</div>'));
+    return;
+  }
+  var cards = el('<div class="cards"></div>');
+  S.coltivi.forEach(function(c){
+    var b = el('<button class="card"><span class="t">'+esc(c.nome)+'</span>'+
+      '<span class="d">'+esc(c.info||'')+'</span></button>');
+    b.onclick = function(){
+      CFG.sheetId=c.id; CFG.sheetNome=c.nome; scrivi(K.cfg, CFG);
+      cancella(K.bozza); caricaStato();
+    };
+    cards.appendChild(b);
+  });
+  main.appendChild(cards);
+
+  var add = el('<button class="card add" style="margin-top:10px"><span class="t">+  Nuovo coltivo</span>'+
+    '<span class="d">crea una copia del modello nel tuo Drive</span></button>');
+  add.onclick = function(){
+    var nome = prompt('Nome del nuovo coltivo:', 'Coltivo ' + new Date().getFullYear());
+    if (!nome) return;
+    S.coltivi = null; render();
+    api('nuovoColtivo', {nome:nome}).then(function(c){
+      CFG.sheetId=c.id; CFG.sheetNome=c.nome; scrivi(K.cfg, CFG); caricaStato();
+    }).catch(function(e){
+      S.msg={tipo:'err', txt:'Non riesco a creare il coltivo. '+esc(e.message)}; caricaColtivi();
+    });
+  };
+  main.appendChild(add);
+
+  main.appendChild(el('<p class="hint" style="margin-top:16px">Compaiono i fogli a cui hai accesso, '+
+    'compresi quelli condivisi con te. Per condividerne uno usa il pulsante Condividi di Google Sheets.</p>'));
+
+  var rb = el('<button class="ghost" style="width:100%;margin-top:4px">Cambia collegamento</button>');
+  rb.onclick = function(){ S.vista='setup'; render(); };
+  main.appendChild(rb);
+}
+
+// ------------------------------------------------------------------- chi
+
+function vistaChi(main){
+  testa('Chi sta valutando?','I voti vengono registrati a questo nome');
+  var lista = (S.stato && S.stato.valutatori) ? S.stato.valutatori : [];
+  if (!lista.length){
+    main.appendChild(el('<div class="msg warn">Nel foglio <b>Config</b>, righe 27 e 28, non c’è ancora '+
+      'nessun nome. Scrivili lì, oppure inserisci il tuo qui sotto.</div>'));
+  }
+  var cards = el('<div class="cards"></div>');
+  lista.forEach(function(nome){
+    var b = el('<button class="card"><span class="t">'+esc(nome)+'</span>'+
+      (nome===CFG.chi ? '<span class="d">in uso adesso</span>' : '')+'</button>');
+    b.onclick = function(){ scegliChi(nome); };
+    cards.appendChild(b);
+  });
+  main.appendChild(cards);
+
+  main.appendChild(el('<label>Oppure un nome diverso</label>'));
+  var inp = el('<input type="text" placeholder="Il tuo nome">');
+  inp.value = CFG.chi || ''; main.appendChild(inp);
+  var ok = el('<button class="card add" style="margin-top:10px"><span class="t">Continua</span></button>');
+  ok.onclick = function(){ var v=inp.value.trim(); if (v) scegliChi(v); };
+  main.appendChild(ok);
+
+  main.appendChild(el('<p class="hint" style="margin-top:18px">Scrivilo sempre allo stesso modo: è la chiave '+
+    'con cui l’app riconosce i tuoi voti e li aggiorna invece di duplicarli.</p>'));
+}
+function scegliChi(nome){ CFG.chi=nome; scrivi(K.cfg, CFG); S.vista='home'; render(); }
+
+// ------------------------------------------------------------------- home
+
+function votanti(fase, sog){
+  if (!S.stato || !S.stato.voti) return [];
+  return S.stato.voti[fase+'|'+sog] || [];
+}
+function haVotato(fase, sog, chi){ return votanti(fase, sog).indexOf(chi) >= 0; }
+
+function vistaHome(main){
+  testa(CFG.sheetNome || 'Selezione Fenotipi', S.stato ? (S.stato.piante.length+' piante') : 'non raggiungibile');
+
+  var c = coda();
+  if (c.length){
+    var w = el('<div class="msg warn"><b>'+c.length+'</b> rilievi in attesa di essere inviati.'+
+      '<br><button class="ghost" style="min-height:44px;margin-top:10px" id="flush">Invia adesso</button></div>');
+    main.appendChild(w);
+    w.querySelector('#flush').onclick = inviaCoda;
+  }
+
+  var cards = el('<div class="cards"></div>');
+  Object.keys(FASI).forEach(function(f){
+    var fa = FASI[f], fatti = 0;
+    if (S.stato){
+      var arr = (fa.chiave==='codice') ? S.stato.codici : S.stato.piante;
+      arr.forEach(function(x){
+        if (haVotato(f, (fa.chiave==='codice')?x.codice:x.id, CFG.chi)) fatti++;
+      });
+    }
+    var b = el('<button class="card"><span class="t">'+fa.nome+'</span>'+
+      '<span class="d">'+fa.desc+(S.stato ? ' · '+fatti+' compilati' : '')+'</span></button>');
+    b.onclick = function(){ S.fase=f; S.vista='lista'; render(); };
+    cards.appendChild(b);
+  });
+  main.appendChild(cards);
+
+  var cb = el('<button class="ghost" style="width:100%;margin-top:14px">Cambia coltivo</button>');
+  cb.onclick = function(){ S.vista='coltivi'; caricaColtivi(); render(); };
+  main.appendChild(cb);
+}
+
+// ------------------------------------------------------------------- lista
+
+function vistaLista(main){
+  var fa = FASI[S.fase];
+  testa(fa.nome, fa.chiave==='codice' ? 'Scegli il campione' : 'Scegli la pianta');
+  if (!S.stato){ main.appendChild(el('<div class="msg err">Coltivo non raggiungibile.</div>')); return; }
+
+  if (fa.chiave==='codice'){
+    main.appendChild(el('<p class="hint"><b>Prova alla cieca.</b> Qui vedi solo i codici: '+
+      'l’app non sa a quale pianta corrispondono, ed è esattamente il punto.</p>'));
+  }
+  var arr = (fa.chiave==='codice') ? S.stato.codici : S.stato.piante;
+  var g = el('<div class="grid"></div>');
+  arr.forEach(function(x){
+    var nome = (fa.chiave==='codice') ? x.codice : x.id;
+    var sotto = (fa.chiave==='codice') ? '' : (x.genetica || '—');
+    var vv = votanti(S.fase, nome), mio = vv.indexOf(CFG.chi)>=0, altri = vv.length-(mio?1:0);
+    var b = el('<button class="pill'+(mio?' done':'')+(altri>0?' altri':'')+'"><b>'+esc(nome)+'</b>'+
+      (sotto ? '<span>'+esc(sotto)+'</span>' : '')+'</button>');
+    b.onclick = function(){
+      S.indice=x.n; S.etichetta=nome; S.step=0; S.dati={};
+      if (S.fase==='fioritura') DESCRITTORI.forEach(function(d){ S.dati[d[0]]=0; });
+      S.vista='step'; salvaBozza(); render();
+    };
+    g.appendChild(b);
+  });
+  main.appendChild(g);
+  main.appendChild(el('<p class="hint" style="margin-top:14px">✓ = hai già votato tu. • = ha votato '+
+    'l’altro valutatore. Rivotare aggiorna solo le TUE righe.</p>'));
+}
+
+// ------------------------------------------------------------------- step
+
+function salvaBozza(){ scrivi(K.bozza, {fase:S.fase, indice:S.indice, etichetta:S.etichetta, step:S.step, dati:S.dati}); }
+
+function vistaStep(main, foot){
+  var fa = FASI[S.fase], st = fa.steps[S.step];
+  testa(S.etichetta, fa.nome);
+  document.getElementById('prog').textContent = (S.step+1)+'/'+fa.steps.length;
+
+  main.appendChild(el('<h2>'+esc(st.label)+'</h2>'));
+  if (st.hint) main.appendChild(el('<p class="hint">'+esc(st.hint)+'</p>'));
+
+  ({score:stepScore, num:stepNum, data:stepData, text:stepText,
+    note:stepText, sn:stepSN, aroma:stepAroma}[st.t])(main, st);
+
+  var b = el('<button class="primary">'+((S.step===fa.steps.length-1)?'Rivedi e salva':'Avanti')+'</button>');
+  b.onclick = avanti; foot.appendChild(b); foot.style.display='flex';
+}
+
+function avanti(){
+  var fa = FASI[S.fase];
+  if (S.step >= fa.steps.length-1) S.vista='rev'; else S.step++;
+  salvaBozza(); render();
+}
+
+function stepScore(main, st){
+  var row = el('<div class="scale"></div>'), lista = el('<ul class="anc"></ul>');
+  function dipingi(){
+    [].forEach.call(row.children, function(b){ b.className = (String(S.dati[st.k])===b.dataset.v)?'on':''; });
+    [].forEach.call(lista.children, function(li){ li.className = (String(S.dati[st.k])===li.dataset.v)?'on':''; });
+  }
+  function scegli(v){ S.dati[st.k]=v; dipingi(); salvaBozza(); setTimeout(avanti, 220); }
+  for (var i=1;i<=5;i++){
+    var b = el('<button data-v="'+i+'">'+i+'</button>');
+    b.onclick = (function(v){ return function(){ scegli(v); }; })(i);
+    row.appendChild(b);
+  }
+  st.anc.forEach(function(txt, idx){
+    var li = el('<li data-v="'+(idx+1)+'"><b>'+(idx+1)+'</b>'+esc(txt)+'</li>');
+    li.onclick = (function(v){ return function(){ scegli(v); }; })(idx+1);
+    lista.appendChild(li);
+  });
+  main.appendChild(row); main.appendChild(lista); dipingi();
+}
+
+function stepNum(main, st){
+  var i = el('<input type="number" inputmode="decimal" step="any" value="'+
+    esc(S.dati[st.k]!=null?S.dati[st.k]:'')+'">');
+  i.oninput = function(){ S.dati[st.k] = (i.value===''?'':Number(i.value)); salvaBozza(); };
+  main.appendChild(i);
+  if (st.unita) main.appendChild(el('<p class="hint" style="text-align:center;margin-top:8px">'+esc(st.unita)+'</p>'));
+  setTimeout(function(){ i.focus(); }, 120);
+}
+
+function stepData(main, st){
+  if (!S.dati[st.k]) S.dati[st.k] = oggi();
+  var i = el('<input type="text" inputmode="numeric" value="'+esc(S.dati[st.k])+'">');
+  i.oninput = function(){ S.dati[st.k]=i.value; salvaBozza(); };
+  main.appendChild(i);
+  main.appendChild(el('<p class="hint" style="margin-top:8px">Formato gg/mm/aaaa. Oggi è già inserito.</p>'));
+}
+
+function stepText(main, st){
+  var i = (st.t==='note') ? el('<textarea placeholder="Facoltativo"></textarea>')
+                          : el('<input type="text" placeholder="Facoltativo">');
+  i.value = S.dati[st.k]!=null ? S.dati[st.k] : '';
+  i.oninput = function(){ S.dati[st.k]=i.value; salvaBozza(); };
+  main.appendChild(i);
+}
+
+function stepSN(main, st){
+  var row = el('<div class="two"></div>');
+  var bs = el('<button class="si'+(st.ko?' ko':'')+'">SÌ</button>');
+  var bn = el('<button class="no">NO</button>');
+  function dipingi(){
+    bs.className='si'+(st.ko?' ko':'')+(S.dati[st.k]==='S'?' on':'');
+    bn.className='no'+(S.dati[st.k]==='N'?' on':'');
+  }
+  function scegli(v){ S.dati[st.k]=v; dipingi(); salvaBozza(); setTimeout(avanti,220); }
+  bs.onclick=function(){ scegli('S'); }; bn.onclick=function(){ scegli('N'); };
+  row.appendChild(bs); row.appendChild(bn); main.appendChild(row);
+  if (st.ko) main.appendChild(el('<p class="ko-note">Criterio KO: se rispondi SÌ la pianta viene squalificata.</p>'));
+  dipingi();
+}
+
+function stepAroma(main){
+  var box = el('<div class="aroma"></div>');
+  DESCRITTORI.forEach(function(d){
+    var k = d[0];
+    if (S.dati[k]==null) S.dati[k]=0;
+    var r = el('<div class="arow"><span class="lab">'+esc(d[1])+'</span><span class="vals"></span></div>');
+    var vals = r.querySelector('.vals');
+    function dipingi(){
+      [].forEach.call(vals.children, function(b){ b.className=(String(S.dati[k])===b.dataset.v)?'on':''; });
+      r.className = 'arow' + (Number(S.dati[k])>0 ? ' set' : '');
+    }
+    for (var v=0; v<=5; v++){
+      var b = el('<button data-v="'+v+'">'+v+'</button>');
+      b.onclick = (function(val){ return function(){ S.dati[k]=val; dipingi(); salvaBozza(); }; })(v);
+      vals.appendChild(b);
+    }
+    dipingi(); box.appendChild(r);
+  });
+  main.appendChild(box);
+}
+
+// ------------------------------------------------------------------- revisione
+
+function vistaRev(main, foot){
+  var fa = FASI[S.fase];
+  testa(S.etichetta,'Controlla prima di salvare');
+  var rev = el('<div class="rev"></div>');
+
+  function riga(k, v, idx){
+    var vuoto = (v===undefined || v===null || v==='');
+    var b = el('<button class="r"><span class="k">'+esc(k)+'</span>'+
+      '<span class="v'+(vuoto?' empty':'')+'">'+esc(vuoto?'—':v)+'</span></button>');
+    b.onclick = function(){ S.step=idx; S.vista='step'; render(); };
+    return b;
+  }
+  fa.steps.forEach(function(st, idx){
+    if (st.t==='aroma'){
+      var att = DESCRITTORI.filter(function(d){ return Number(S.dati[d[0]])>0; })
+        .map(function(d){ return d[1]+' '+S.dati[d[0]]; });
+      rev.appendChild(riga('Profilo aromatico', att.length?att.join(' · '):'nessun descrittore', idx));
+    } else {
+      rev.appendChild(riga(st.label, S.dati[st.k], idx));
+    }
+  });
+  main.appendChild(rev);
+  main.appendChild(el('<p class="hint">I campi vuoti non vengono scritti: la cella nel foglio resta '+
+    'com’era. Tocca una riga per correggerla.</p>'));
+
+  var b = el('<button class="primary">Salva nel foglio</button>');
+  b.onclick = function(){ invia(b); };
+  foot.appendChild(b); foot.style.display='flex';
+}
+
+// ------------------------------------------------------------------- invio
+
+function invia(btn){
+  var pacco = { fase:S.fase, indice:S.indice, valutatore:CFG.chi, dati:S.dati,
+                sheetId:CFG.sheetId, etichetta:S.etichetta };
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Salvo…';
+
+  api('salva', pacco).then(function(r){
+    cancella(K.bozza);
+    S.esito = {ok:true, riga:r.riga, soggetto:r.soggetto, nuove:r.nuove, aggiornate:r.aggiornate};
+    S.vista='fine'; render();
+    api('stato').then(function(d){ S.stato=d; if (S.vista==='fine') render(); }).catch(function(){});
+  }).catch(function(e){
+    var c = coda(); c.push(pacco); setCoda(c); cancella(K.bozza);
+    S.esito = {ok:false, err:(e && e.message)||String(e), inCoda:c.length};
+    S.vista='fine'; render();
+  });
+}
+
+function inviaCoda(){
+  var c = coda();
+  if (!c.length) return;
+  S.msg = {tipo:'warn', txt:'<span class="spin"></span>Invio '+c.length+' rilievi…'};
+  render();
+  api('salvaCoda', {elenco:c}).then(function(esiti){
+    var falliti = [];
+    esiti.forEach(function(e,i){ if (!e.ok) falliti.push(c[i]); });
+    setCoda(falliti);
+    S.msg = falliti.length
+      ? {tipo:'err', txt:'Inviati '+(esiti.length-falliti.length)+', ancora '+falliti.length+' in attesa.'}
+      : {tipo:'ok', txt:'Tutti i rilievi in attesa sono stati salvati nel foglio.'};
+    return api('stato').then(function(d){ S.stato=d; });
+  }).catch(function(){
+    S.msg = {tipo:'err', txt:'Invio non riuscito: i rilievi restano in attesa sul telefono.'};
+  }).then(function(){ render(); });
+}
+
+// ------------------------------------------------------------------- fine
+
+function vistaFine(main, foot){
+  var fa = FASI[S.fase], e = S.esito || {};
+  testa(CFG.sheetNome || 'Selezione Fenotipi', fa.nome);
+
+  if (e.ok){
+    main.appendChild(el('<div class="center"><div class="big">✓</div>'+
+      '<b style="color:var(--txt);font-size:18px">'+esc(S.etichetta)+' salvata</b><br>'+
+      (e.nuove||0)+' voti nuovi · '+(e.aggiornate||0)+' aggiornati</div>'));
+  } else {
+    main.appendChild(el('<div class="msg err"><b>Non sono riuscito a scrivere nel foglio.</b><br>'+
+      esc(e.err)+'<br><br>Il rilievo di <b>'+esc(S.etichetta)+'</b> è al sicuro sul telefono '+
+      '('+e.inCoda+' in attesa). Premi “Invia adesso” dalla schermata iniziale quando torni in rete.</div>'));
+  }
+
+  var next = null;
+  if (S.stato){
+    var arr = (fa.chiave==='codice') ? S.stato.codici : S.stato.piante;
+    for (var i=0;i<arr.length;i++){
+      var nm = (fa.chiave==='codice') ? arr[i].codice : arr[i].id;
+      if (arr[i].n > S.indice && !haVotato(S.fase, nm, CFG.chi)){ next = {x:arr[i], nome:nm}; break; }
+    }
+  }
+  if (next){
+    var b = el('<button class="primary">Prossima: '+esc(next.nome)+'</button>');
+    b.onclick = function(){
+      S.indice=next.x.n; S.etichetta=next.nome; S.step=0; S.dati={};
+      if (S.fase==='fioritura') DESCRITTORI.forEach(function(d){ S.dati[d[0]]=0; });
+      S.vista='step'; salvaBozza(); render();
+    };
+    foot.appendChild(b);
+  }
+  var h = el('<button class="ghost">Home</button>');
+  h.onclick = function(){ S.vista='home'; render(); };
+  foot.appendChild(h); foot.style.display='flex';
+}
+</script>
+</body>
+</html>
